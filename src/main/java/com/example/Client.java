@@ -2,9 +2,9 @@ package com.example;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.cli.*;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,12 +15,13 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VpnClient implements CommandLineRunner {
+@Component
+@RequiredArgsConstructor
+public class Client {
     private static final String STATUS_COMMAND = "status";
     private static final String UP_COMMAND = "up";
     private static final String DOWN_COMMAND = "down";
     private static final String HISTORY_COMMAND = "history";
-    private static final String EVENTS_JSON_FILENAME = "events.json";
 
     private final static Map<String, Options> COMMANDS = Map.of(
             STATUS_COMMAND, new Options(),
@@ -33,11 +34,8 @@ public class VpnClient implements CommandLineRunner {
                     .addOption("S", "status", true, "Status")
     );
 
-    public static void main(String[] args) {
-        SpringApplication.run(VpnClient.class, args);
-    }
+    private final File eventsFile;
 
-    @Override
     public void run(String... args) throws ParseException, IOException {
         CommandLineParser parser = new DefaultParser();
 
@@ -145,16 +143,15 @@ public class VpnClient implements CommandLineRunner {
 
     private void writeEventToFile(Event event) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        File file = new File(EVENTS_JSON_FILENAME);
 
-        if (file.createNewFile()) {
-            objectMapper.writeValue(file, Collections.emptyList());
+        if (eventsFile.createNewFile()) {
+            objectMapper.writeValue(eventsFile, Collections.emptyList());
         }
 
-        List<Event> events = objectMapper.readValue(file, new TypeReference<>() {
+        List<Event> events = objectMapper.readValue(eventsFile, new TypeReference<>() {
         });
         events.add(event);
-        objectMapper.writeValue(file, events);
+        objectMapper.writeValue(eventsFile, events);
     }
 
     private Optional<Event> getLatestEventByStatus(Status... status) throws IOException {
@@ -205,13 +202,12 @@ public class VpnClient implements CommandLineRunner {
 
     private List<Event> readAllEvents() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        File file = new File(EVENTS_JSON_FILENAME);
 
-        if (file.createNewFile()) {
-            objectMapper.writeValue(file, Collections.emptyList());
+        if (eventsFile.createNewFile()) {
+            objectMapper.writeValue(eventsFile, Collections.emptyList());
         }
 
-        return objectMapper.readValue(file, new TypeReference<>() {
+        return objectMapper.readValue(eventsFile, new TypeReference<>() {
         });
     }
 }
