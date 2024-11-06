@@ -13,8 +13,6 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.lang.System.exit;
-
 public class VpnClient implements CommandLineRunner {
     private static final String STATUS_COMMAND = "status";
     private static final String UP_COMMAND = "up";
@@ -64,7 +62,6 @@ public class VpnClient implements CommandLineRunner {
 
                 if (latestNotFailedEvent.isEmpty()) {
                     System.out.println("No events found");
-                    exit(1);
                 } else {
                     System.out.println("Status: " + latestNotFailedEvent.get().status());
 
@@ -111,7 +108,7 @@ public class VpnClient implements CommandLineRunner {
                 String status = cmd.getOptionValue("status");
 
                 filterEvents(from, to, sort, status).forEach(event -> {
-                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp()/1000, 0, ZoneOffset.UTC);
+                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp() / 1000, 0, ZoneOffset.UTC);
                     System.out.println("Status: " + event.status() + ", Timestamp: " + dateTime);
                 });
             }
@@ -144,7 +141,8 @@ public class VpnClient implements CommandLineRunner {
             objectMapper.writeValue(file, Collections.emptyList());
         }
 
-        List<Event> events = objectMapper.readValue(file, new TypeReference<>() {});
+        List<Event> events = objectMapper.readValue(file, new TypeReference<>() {
+        });
         events.add(event);
         objectMapper.writeValue(file, events);
     }
@@ -203,6 +201,7 @@ public class VpnClient implements CommandLineRunner {
             objectMapper.writeValue(file, Collections.emptyList());
         }
 
-        return objectMapper.readValue(file, new TypeReference<>() {});
+        return objectMapper.readValue(file, new TypeReference<>() {
+        });
     }
 }
