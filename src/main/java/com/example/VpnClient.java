@@ -66,7 +66,7 @@ public class VpnClient implements CommandLineRunner {
                     System.out.println("Status: " + latestNotFailedEvent.get().status());
 
                     if (latestNotFailedEvent.get().status() == Status.UP) {
-                        long uptime = (getTimestamp() - latestNotFailedEvent.get().timestamp()) / 1000;
+                        long uptime = (System.currentTimeMillis() - latestNotFailedEvent.get().timestamp()) / 1000;
                         System.out.println("Uptime: " + uptime + " seconds");
                     }
                 }
@@ -80,10 +80,10 @@ public class VpnClient implements CommandLineRunner {
                     Status randomResult = new Random().nextBoolean() ? Status.UP : Status.FAILED;
 
                     System.out.println("Starting...");
-                    writeEventToFile(new Event(Status.STARTING, getTimestamp()));
+                    writeEventToFile(new Event(Status.STARTING, System.currentTimeMillis()));
 
                     System.out.println("Status: " + randomResult.name());
-                    writeEventToFile(new Event(randomResult, getTimestamp()));
+                    writeEventToFile(new Event(randomResult, System.currentTimeMillis()));
                 }
             }
             case DOWN_COMMAND -> {
@@ -95,10 +95,10 @@ public class VpnClient implements CommandLineRunner {
                     Status randomResult = new Random().nextBoolean() ? Status.DOWN : Status.FAILED;
 
                     System.out.println("Stopping...");
-                    writeEventToFile(new Event(Status.STOPPING, getTimestamp()));
+                    writeEventToFile(new Event(Status.STOPPING, System.currentTimeMillis()));
 
                     System.out.println("Status: " + randomResult.name());
-                    writeEventToFile(new Event(randomResult, getTimestamp()));
+                    writeEventToFile(new Event(randomResult, System.currentTimeMillis()));
                 }
             }
             case HISTORY_COMMAND -> {
@@ -129,13 +129,9 @@ public class VpnClient implements CommandLineRunner {
         }
     }
 
-    private static long getTimestamp() {
-        return System.currentTimeMillis();
-    }
-
     private void writeEventToFile(Event event) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        File file = new File("events.json");
+        File file = new File(EVENTS_JSON_FILENAME);
 
         if (file.createNewFile()) {
             objectMapper.writeValue(file, Collections.emptyList());
