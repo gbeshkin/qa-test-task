@@ -17,7 +17,7 @@ mvn clean spring-boot:run "-Dspring-boot.run.arguments=down"
 ```
 
 ```bash
-mvn clean spring-boot:run "-Dspring-boot.run.arguments=history --sort asc"
+mvn clean spring-boot:run "-Dspring-boot.run.arguments=history --sort asc -status STARTING --from 2021-10-01 --to 2021-10-31"
 ```
 
 ```bash

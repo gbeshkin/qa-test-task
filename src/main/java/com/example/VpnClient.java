@@ -1,5 +1,6 @@
 package com.example;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
 import org.springframework.boot.CommandLineRunner;
@@ -140,16 +141,16 @@ public class VpnClient implements CommandLineRunner {
         File file = new File("events.json");
 
         if (file.createNewFile()) {
-            objectMapper.writeValue(file, new Events(Collections.emptyList()));
+            objectMapper.writeValue(file, Collections.emptyList());
         }
 
-        Events events = objectMapper.readValue(file, Events.class);
-        events.events().add(event);
+        List<Event> events = objectMapper.readValue(file, new TypeReference<>() {});
+        events.add(event);
         objectMapper.writeValue(file, events);
     }
 
     private Optional<Event> getLatestEventByStatus(Status... status) throws IOException {
-        return readAllEvents().events().stream()
+        return readAllEvents().stream()
                 .filter(event -> {
                     for (Status s : status) {
                         if (event.status() == s) {
@@ -163,13 +164,13 @@ public class VpnClient implements CommandLineRunner {
     }
 
     private Optional<Event> getLatestEvent() throws IOException {
-        return readAllEvents().events().stream()
+        return readAllEvents().stream()
                 .reduce((first, second) -> second)
                 .or(Optional::empty);
     }
 
     private List<Event> filterEvents(String from, String to, String sort, String status) throws IOException {
-        List<Event> events = readAllEvents().events();
+        List<Event> events = readAllEvents();
 
         return events.stream()
                 .filter(event -> {
@@ -194,14 +195,14 @@ public class VpnClient implements CommandLineRunner {
                 .collect(Collectors.toList());
     }
 
-    private Events readAllEvents() throws IOException {
+    private List<Event> readAllEvents() throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         File file = new File(EVENTS_JSON_FILENAME);
 
         if (file.createNewFile()) {
-            objectMapper.writeValue(file, new Events(Collections.emptyList()));
+            objectMapper.writeValue(file, Collections.emptyList());
         }
 
-        return objectMapper.readValue(file, Events.class);
+        return objectMapper.readValue(file, new TypeReference<>() {});
     }
 }
