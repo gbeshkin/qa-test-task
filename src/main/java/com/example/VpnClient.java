@@ -8,7 +8,9 @@ import org.springframework.boot.SpringApplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,7 +56,7 @@ public class VpnClient implements CommandLineRunner {
         }
 
         Options options = COMMANDS.get(command);
-        CommandLine cmd = parser.parse(options, args);
+        CommandLine commandLine = parser.parse(options, args);
 
         switch (command) {
             case STATUS_COMMAND -> {
@@ -102,15 +104,27 @@ public class VpnClient implements CommandLineRunner {
                 }
             }
             case HISTORY_COMMAND -> {
-                String from = cmd.getOptionValue("from");
-                String to = cmd.getOptionValue("to");
-                String sort = cmd.getOptionValue("sort");
-                String status = cmd.getOptionValue("status");
+                String stringFrom = commandLine.getOptionValue("from");
+                long from = stringFrom != null ? LocalDate.parse(stringFrom)
+                        .toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.UTC) * 1000 : -1;
 
-                filterEvents(from, to, sort, status).forEach(event -> {
-                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp() / 1000, 0, ZoneOffset.UTC);
-                    System.out.println("Status: " + event.status() + ", Timestamp: " + dateTime);
-                });
+                String stringTo = commandLine.getOptionValue("to");
+                long to = stringTo != null ? LocalDate.parse(stringTo)
+                        .toEpochSecond(LocalTime.of(0, 0), ZoneOffset.UTC) * 1000 : -1;
+
+                String sort = commandLine.getOptionValue("sort");
+                String status = commandLine.getOptionValue("status");
+
+                List<Event> events = filterEvents(from, to, sort, status);
+
+                if (events.isEmpty()) {
+                    System.out.println("No events found");
+                } else {
+                    events.forEach(event -> {
+                        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp() / 1000, 0, ZoneOffset.UTC);
+                        System.out.println("Status: " + event.status() + ", Timestamp: " + dateTime);
+                    });
+                }
             }
         }
     }
@@ -163,15 +177,15 @@ public class VpnClient implements CommandLineRunner {
                 .or(Optional::empty);
     }
 
-    private List<Event> filterEvents(String from, String to, String sort, String status) throws IOException {
+    private List<Event> filterEvents(long from, long to, String sort, String status) throws IOException {
         List<Event> events = readAllEvents();
 
         return events.stream()
                 .filter(event -> {
-                    if (from != null && event.timestamp() < Integer.parseInt(from)) {
+                    if (from != -1 && event.timestamp() < from) {
                         return false;
                     }
-                    if (to != null && event.timestamp() > Integer.parseInt(to)) {
+                    if (to != -1 && event.timestamp() > to) {
                         return false;
                     }
                     return status == null || event.status().equals(Status.valueOf(status));
