@@ -5,7 +5,7 @@ import java.util.List;
 public record Events(List<Event> events) {
 }
 
-record Event(Status status, int timestamp) {
+record Event(Status status, long timestamp) {
 }
 
 enum Status {

@@ -9,11 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.System.exit;
 
 public class VpnClient implements CommandLineRunner {
     private static final String STATUS_COMMAND = "status";
@@ -60,29 +59,47 @@ public class VpnClient implements CommandLineRunner {
 
         switch (command) {
             case STATUS_COMMAND -> {
-                Event latestNotFailedEvent = getLatestNotFailedEvent();
-                System.out.println("Status: " + latestNotFailedEvent.status());
+                Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
 
-                if (latestNotFailedEvent.status() == Status.UP) {
-                    int uptime = getTimestamp() - latestNotFailedEvent.timestamp();
-                    System.out.println("Uptime: " + uptime + " seconds");
+                if (latestNotFailedEvent.isEmpty()) {
+                    System.out.println("No events found");
+                    exit(1);
+                } else {
+                    System.out.println("Status: " + latestNotFailedEvent.get().status());
+
+                    if (latestNotFailedEvent.get().status() == Status.UP) {
+                        long uptime = (getTimestamp() - latestNotFailedEvent.get().timestamp()) / 1000;
+                        System.out.println("Uptime: " + uptime + " seconds");
+                    }
                 }
             }
             case UP_COMMAND -> {
-                if (getLatestNotFailedEvent().status() == Status.UP) {
+                Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
+
+                if (latestNotFailedEvent.isPresent() && latestNotFailedEvent.get().status() == Status.UP) {
                     System.out.println("Already UP");
                 } else {
                     Status randomResult = new Random().nextBoolean() ? Status.UP : Status.FAILED;
+
+                    System.out.println("Starting...");
                     writeEventToFile(new Event(Status.STARTING, getTimestamp()));
+
+                    System.out.println("Status: " + randomResult.name());
                     writeEventToFile(new Event(randomResult, getTimestamp()));
                 }
             }
             case DOWN_COMMAND -> {
-                if (getLatestNotFailedEvent().status() == Status.DOWN) {
+                Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
+
+                if (latestNotFailedEvent.isPresent() && latestNotFailedEvent.get().status() == Status.DOWN) {
                     System.out.println("Already DOWN");
                 } else {
                     Status randomResult = new Random().nextBoolean() ? Status.DOWN : Status.FAILED;
+
+                    System.out.println("Stopping...");
                     writeEventToFile(new Event(Status.STOPPING, getTimestamp()));
+
+                    System.out.println("Status: " + randomResult.name());
                     writeEventToFile(new Event(randomResult, getTimestamp()));
                 }
             }
@@ -92,28 +109,30 @@ public class VpnClient implements CommandLineRunner {
                 String sort = cmd.getOptionValue("sort");
                 String status = cmd.getOptionValue("status");
 
-                System.out.println(sort + " " + status);
-
                 filterEvents(from, to, sort, status).forEach(event -> {
-                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp(), 0, ZoneOffset.UTC);
+                    LocalDateTime dateTime = LocalDateTime.ofEpochSecond(event.timestamp()/1000, 0, ZoneOffset.UTC);
                     System.out.println("Status: " + event.status() + ", Timestamp: " + dateTime);
                 });
             }
         }
     }
 
-    private Event getLatestNotFailedEvent() throws IOException {
-        Event latestEvent = getLatestEvent();
+    private Optional<Event> getLatestNotFailedEvent() throws IOException {
+        Optional<Event> latestEvent = getLatestEvent();
 
-        if (latestEvent.status() == Status.FAILED) {
-            return getLatestEventByStatus(Status.UP, Status.DOWN);
+        if (latestEvent.isEmpty()) {
+            return Optional.empty();
         } else {
-            return latestEvent;
+            if (latestEvent.get().status() == Status.FAILED) {
+                return getLatestEventByStatus(Status.UP, Status.DOWN);
+            } else {
+                return latestEvent;
+            }
         }
     }
 
-    private static int getTimestamp() {
-        return (int) (System.currentTimeMillis() / 1000);
+    private static long getTimestamp() {
+        return System.currentTimeMillis();
     }
 
     private void writeEventToFile(Event event) throws IOException {
@@ -129,7 +148,7 @@ public class VpnClient implements CommandLineRunner {
         objectMapper.writeValue(file, events);
     }
 
-    private Event getLatestEventByStatus(Status... status) throws IOException {
+    private Optional<Event> getLatestEventByStatus(Status... status) throws IOException {
         return readAllEvents().events().stream()
                 .filter(event -> {
                     for (Status s : status) {
@@ -140,13 +159,13 @@ public class VpnClient implements CommandLineRunner {
                     return false;
                 })
                 .reduce((first, second) -> second)
-                .orElse(null);
+                .or(Optional::empty);
     }
 
-    private Event getLatestEvent() throws IOException {
+    private Optional<Event> getLatestEvent() throws IOException {
         return readAllEvents().events().stream()
                 .reduce((first, second) -> second)
-                .orElse(null);
+                .or(Optional::empty);
     }
 
     private List<Event> filterEvents(String from, String to, String sort, String status) throws IOException {
@@ -165,9 +184,9 @@ public class VpnClient implements CommandLineRunner {
                 .sorted((event1, event2) -> {
                     if (sort != null) {
                         if (sort.equals("asc")) {
-                            return Integer.compare(event1.timestamp(), event2.timestamp());
+                            return Long.compare(event1.timestamp(), event2.timestamp());
                         } else if (sort.equals("desc")) {
-                            return Integer.compare(event2.timestamp(), event1.timestamp());
+                            return Long.compare(event2.timestamp(), event1.timestamp());
                         }
                     }
                     return 0;
