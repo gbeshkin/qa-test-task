@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.cli.*;
-import org.junit.platform.commons.logging.Logger;
-import org.junit.platform.commons.logging.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -35,9 +33,6 @@ public class Client {
                     .addOption("s", "sort", true, "Sort")
                     .addOption("S", "status", true, "Status")
     );
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
-
-
 
     private final File eventsFile;
 
@@ -45,12 +40,11 @@ public class Client {
         CommandLineParser parser = new DefaultParser();
 
         if (args.length == 0) {
-            logger.info("Usage: vpn-client <command> [options]");
-            logger.info("Commands:");
-            COMMANDS.keySet().forEach(command -> logger.info("  {}", command)); // Use {} for placeholder
+            System.out.println("Usage: vpn-client <command> [options]");
+            System.out.println("Commands:");
+            COMMANDS.keySet().forEach(command -> System.out.println("  " + command));
             return;
         }
-
 
         String command = args[0];
 

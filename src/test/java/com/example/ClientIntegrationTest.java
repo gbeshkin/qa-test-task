@@ -68,9 +68,6 @@ public class ClientIntegrationTest {
         assertEquals("No events found", getOutput());
     }
 
-
-    
-
     private String getOutput() {
         return outputStreamCaptor.toString().trim();
     }
