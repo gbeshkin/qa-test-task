@@ -1,0 +1,17 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Nov 07 11:37:01 EET 2024
+https\://repository.int.kn/repository/sso/.error=
+https\://repository.int.kn/repository/sso/.lastUpdated=1730972221146
+@zscaler.proxy.int.kn\:80>@default-jasper-https\://jaspersoft.artifactoryonline.com/jaspersoft/third-party-ce-artifacts/.lastUpdated=1730972221031
+https\://repository.int.kn/repository/cip-snapshots/.lastUpdated=1730972221366
+https\://jaspersoft.artifactoryonline.com/jaspersoft/third-party-ce-artifacts/.error=Could not transfer artifact com.fasterxml\:oss-parent\:pom\:58 from/to jasper (https\://jaspersoft.artifactoryonline.com/jaspersoft/third-party-ce-artifacts)\: status code\: 502, reason phrase\: Bad Gateway (502)
+https\://repository.int.kn/repository/apache-releases/.error=
+https\://repository.int.kn/repository/cip/.error=
+https\://repository.int.kn/repository/maven/.lastUpdated=1730972221500
+https\://repository.int.kn/repository/apache-releases/.lastUpdated=1730972221311
+https\://repository.int.kn/repository/thirdparty/.error=
+https\://repository.int.kn/repository/esb/.error=
+https\://repository.int.kn/repository/esb/.lastUpdated=1730972221095
+https\://repository.int.kn/repository/thirdparty/.lastUpdated=1730972221197
+https\://repository.int.kn/repository/cip/.lastUpdated=1730972221252
+https\://repository.int.kn/repository/cip-snapshots/.error=

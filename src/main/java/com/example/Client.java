@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.cli.*;
+import org.junit.platform.commons.logging.Logger;
+import org.junit.platform.commons.logging.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -18,21 +20,24 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class Client {
-    private static final String STATUS_COMMAND = "status";
-    private static final String UP_COMMAND = "up";
-    private static final String DOWN_COMMAND = "down";
-    private static final String HISTORY_COMMAND = "history";
+    private static final String COMMAND_STATUS = "status";
+    private static final String COMMAND_UP = "up";
+    private static final String COMMAND_DOWN = "down";
+    private static final String COMMAND_HISTORY = "history";
 
     private final static Map<String, Options> COMMANDS = Map.of(
-            STATUS_COMMAND, new Options(),
-            UP_COMMAND, new Options(),
-            DOWN_COMMAND, new Options(),
-            HISTORY_COMMAND, new Options()
+            COMMAND_STATUS, new Options(),
+            COMMAND_UP, new Options(),
+            COMMAND_DOWN, new Options(),
+            COMMAND_HISTORY, new Options()
                     .addOption("f", "from", true, "From")
                     .addOption("t", "to", true, "To")
                     .addOption("s", "sort", true, "Sort")
                     .addOption("S", "status", true, "Status")
     );
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+
+
 
     private final File eventsFile;
 
@@ -40,11 +45,12 @@ public class Client {
         CommandLineParser parser = new DefaultParser();
 
         if (args.length == 0) {
-            System.out.println("Usage: vpn-client <command> [options]");
-            System.out.println("Commands:");
-            COMMANDS.keySet().forEach(command -> System.out.println("  " + command));
+            logger.info("Usage: vpn-client <command> [options]");
+            logger.info("Commands:");
+            COMMANDS.keySet().forEach(command -> logger.info("  {}", command)); // Use {} for placeholder
             return;
         }
+
 
         String command = args[0];
 
@@ -57,7 +63,7 @@ public class Client {
         CommandLine commandLine = parser.parse(options, args);
 
         switch (command) {
-            case STATUS_COMMAND -> {
+            case COMMAND_STATUS -> {
                 Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
 
                 if (latestNotFailedEvent.isEmpty()) {
@@ -71,7 +77,7 @@ public class Client {
                     }
                 }
             }
-            case UP_COMMAND -> {
+            case COMMAND_UP -> {
                 Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
 
                 if (latestNotFailedEvent.isPresent() && latestNotFailedEvent.get().status() == Status.UP) {
@@ -86,7 +92,7 @@ public class Client {
                     writeEventToFile(new Event(randomResult, System.currentTimeMillis()));
                 }
             }
-            case DOWN_COMMAND -> {
+            case COMMAND_DOWN -> {
                 Optional<Event> latestNotFailedEvent = getLatestNotFailedEvent();
 
                 if (latestNotFailedEvent.isPresent() && latestNotFailedEvent.get().status() == Status.DOWN) {
@@ -101,7 +107,7 @@ public class Client {
                     writeEventToFile(new Event(randomResult, System.currentTimeMillis()));
                 }
             }
-            case HISTORY_COMMAND -> {
+            case COMMAND_HISTORY -> {
                 String stringFrom = commandLine.getOptionValue("from");
                 long from = stringFrom != null ? LocalDate.parse(stringFrom)
                         .toEpochSecond(LocalTime.MIDNIGHT, ZoneOffset.UTC) * 1000 : -1;

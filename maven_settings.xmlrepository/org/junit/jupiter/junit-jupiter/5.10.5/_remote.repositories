@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Nov 07 11:39:00 EET 2024
+junit-jupiter-5.10.5.jar>common=
+junit-jupiter-5.10.5.pom>common=
