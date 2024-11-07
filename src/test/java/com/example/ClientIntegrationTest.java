@@ -21,7 +21,6 @@ public class ClientIntegrationTest {
     private final PrintStream standardOut = System.out;
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 
-
     @Autowired
     Client client;
 
