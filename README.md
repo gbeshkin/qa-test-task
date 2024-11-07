@@ -55,4 +55,5 @@ mvn clean test
 - Clone or fork this repository to your GitHub account 
 - Complete integration tests for the application
 - Identify edge cases and write tests for them
+- Follow Java coding best practices and code quality standards
 - Share the link to your repository with us
