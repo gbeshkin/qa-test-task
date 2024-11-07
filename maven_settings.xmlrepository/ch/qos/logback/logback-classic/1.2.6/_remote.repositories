@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Nov 07 18:00:28 EET 2024
+logback-classic-1.2.6.jar>common=
+logback-classic-1.2.6.pom>common=
