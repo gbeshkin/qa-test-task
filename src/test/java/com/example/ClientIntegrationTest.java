@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Bean;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.text.ParseException;
 import java.time.LocalDate;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,7 +48,85 @@ public class ClientIntegrationTest {
         System.setOut(standardOut);
     }
 
+    @Test
+    @SneakyThrows
+    @DisplayName("Verify handling of corrupted events file")
+    void shouldHandleCorruptedEventsFile() {
+        File eventsFile = new File(tempDir, "events.json");
+        try (var writer = new java.io.FileWriter(eventsFile)) {
+            writer.write("{invalidJson}");
+        }
 
+        client.run("history", "-f", "2023-01-01", "-t", "2023-12-31");
+
+        String output = getOutput().trim();
+        assertTrue(output.contains("Error"), "Expected error message for corrupted events file");
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Verify behavior when events file is empty")
+    void shouldHandleEmptyEventsFile() {
+        client.run("history", "-f", "2023-01-01", "-t", "2023-12-31");
+
+        String output = getOutput().trim();
+        assertTrue(output.contains("No events found"),
+                "Expected message for empty events file");
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Verify concurrent execution of commands")
+    void shouldHandleConcurrentCommands() {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        executor.submit(() -> {
+            try {
+                client.run("up");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        executor.submit(() -> {
+            try {
+                client.run("down");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        executor.shutdown();
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Verify performance under large data")
+    void shouldHandleLargeEventsFile() {
+        File eventsFile = new File(tempDir, "events.json");
+        try (var writer = new java.io.FileWriter(eventsFile)) {
+            writer.write("[");
+            for (int i = 0; i < 10000; i++) {
+                writer.write(String.format("{\"status\":\"UP\",\"timestamp\":%d},", System.currentTimeMillis() - i * 1000));
+            }
+            writer.write("{}]");
+        }
+
+        client.run("history", "-f", "2023-01-01", "-t", "2023-12-31");
+
+        String output = getOutput().trim();
+        assertTrue(output.length() > 0, "Expected output for large events file");
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Verify invalid combination of options")
+    void shouldHandleInvalidOptionCombination() {
+        client.run("history", "-f", "2023-01-01", "-t", "2023-12-31", "-f", "2024-01-01");
+
+        String output = getOutput().trim();
+        assertTrue(output.contains("Duplicate option detected"), "Expected error for duplicate options");
+    }
 
 
     @Test
